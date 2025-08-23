@@ -6,9 +6,8 @@ public class PlayerMovement : MonoBehaviour
 {
     private GameObject[] obstacles;
     private GameObject[] objects;
-
     private bool readyToMove = true;
-    public float moveCooldown = 0.15f; // delay biar gerakan step-by-step
+    public float moveDelay = 0.15f;
 
     void Start()
     {
@@ -23,8 +22,15 @@ public class PlayerMovement : MonoBehaviour
         if (moveInput.sqrMagnitude > 0.5f && readyToMove)
         {
             readyToMove = false;
+
+            if (Mathf.Abs(moveInput.x) > Mathf.Abs(moveInput.y))
+                moveInput = new Vector2(Mathf.Sign(moveInput.x), 0);
+            else
+                moveInput = new Vector2(0, Mathf.Sign(moveInput.y));
+
             Move(moveInput);
-            Invoke(nameof(ResetMove), moveCooldown);
+
+            Invoke("ResetMove", moveDelay);
         }
     }
 
@@ -33,48 +39,39 @@ public class PlayerMovement : MonoBehaviour
         readyToMove = true;
     }
 
-    public bool Move(Vector2 direction)
+    public void Move(Vector2 direction)
     {
-        // Hanya gerak horizontal atau vertikal
-        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
-            direction = new Vector2(Mathf.Sign(direction.x), 0);
-        else
-            direction = new Vector2(0, Mathf.Sign(direction.y));
+        Vector2 targetPos = new Vector2(
+            Mathf.Round(transform.position.x + direction.x),
+            Mathf.Round(transform.position.y + direction.y)
+        );
 
-        // Cek kalau posisi depan terhalang
         if (!Blocked(transform.position, direction))
         {
-            transform.position += (Vector3)direction;
-            return true;
+            transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
         }
-
-        return false;
     }
 
     public bool Blocked(Vector3 position, Vector2 direction)
     {
-        Vector2 newPos = new Vector2(position.x, position.y) + direction;
+        Vector2 targetPos = new Vector2(
+            Mathf.Round(position.x + direction.x),
+            Mathf.Round(position.y + direction.y)
+        );
 
-        // Cek obstacle (tembok)
         foreach (var obj in obstacles)
         {
-            if (obj.transform.position.x == newPos.x && obj.transform.position.y == newPos.y)
-            {
-                return true;
-            }
+            Vector2 obsPos = new Vector2(Mathf.Round(obj.transform.position.x), Mathf.Round(obj.transform.position.y));
+            if (targetPos == obsPos) return true;
         }
 
-        // Cek object (box)
         foreach (var objToPush in objects)
         {
-            if (objToPush.transform.position.x == newPos.x && objToPush.transform.position.y == newPos.y)
+            Vector2 objPos = new Vector2(Mathf.Round(objToPush.transform.position.x), Mathf.Round(objToPush.transform.position.y));
+            if (targetPos == objPos)
             {
                 Push objPush = objToPush.GetComponent<Push>();
-                if (objPush != null)
-                {
-                    if (!objPush.Move(direction))
-                        return true; // kalau box tidak bisa geser → blocked
-                }
+                if (objPush != null && !objPush.Move(direction)) return true;
             }
         }
 

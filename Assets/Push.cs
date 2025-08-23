@@ -15,40 +15,50 @@ public class Push : MonoBehaviour
 
     public bool Move(Vector2 direction)
     {
-        // Kalau posisi target terhalang → tidak bisa geser
+        Vector2 targetPos = new Vector2(
+            Mathf.Round(transform.position.x + direction.x),
+            Mathf.Round(transform.position.y + direction.y)
+        );
+
         if (ObjToBlocked(transform.position, direction))
-        {
             return false;
-        }
-        else
+
+        transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
+
+        // cek goal
+        GameObject[] goals = GameObject.FindGameObjectsWithTag("Goal");
+        foreach (var g in goals)
         {
-            // Geser kotak ke arah tujuan
-            transform.position += (Vector3)direction;
-            return true;
+            Vector2 goalPos = new Vector2(Mathf.Round(g.transform.position.x), Mathf.Round(g.transform.position.y));
+            Goal goalScript = g.GetComponent<Goal>();
+            if (goalScript != null)
+            {
+                goalScript.isOccupied = ((Vector2)transform.position == goalPos);
+            }
         }
+
+        return true;
     }
 
     public bool ObjToBlocked(Vector3 position, Vector2 direction)
     {
-        Vector2 newPos = new Vector2(position.x, position.y) + direction;
+        Vector2 targetPos = new Vector2(
+            Mathf.Round(position.x + direction.x),
+            Mathf.Round(position.y + direction.y)
+        );
 
-        // Cek obstacle (tembok)
         foreach (var obj in obstacles)
         {
-            if (obj.transform.position.x == newPos.x && obj.transform.position.y == newPos.y)
-            {
-                return true;
-            }
+            Vector2 obsPos = new Vector2(Mathf.Round(obj.transform.position.x), Mathf.Round(obj.transform.position.y));
+            if (targetPos == obsPos) return true;
         }
 
-        // Cek object lain (box lain)
         foreach (var objToPush in objects)
         {
-            if (objToPush != gameObject && 
-                objToPush.transform.position.x == newPos.x && 
-                objToPush.transform.position.y == newPos.y)
+            if (objToPush != gameObject)
             {
-                return true;
+                Vector2 objPos = new Vector2(Mathf.Round(objToPush.transform.position.x), Mathf.Round(objToPush.transform.position.y));
+                if (targetPos == objPos) return true;
             }
         }
 
