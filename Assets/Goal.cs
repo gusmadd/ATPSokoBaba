@@ -2,24 +2,31 @@ using UnityEngine;
 
 public class Goal : MonoBehaviour
 {
+    public string goalColor; // "Red", "Blue", dll
     public bool isOccupied = false;
 
-    void Update()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        // cek apakah ada box di posisi goal ini
-        GameObject[] boxes = GameObject.FindGameObjectsWithTag("Objects");
-        isOccupied = false;
-
-        foreach (var box in boxes)
+        Box box = collision.GetComponent<Box>();
+        if (box != null && box.boxColor == goalColor)
         {
-            Vector2 boxPos = new Vector2(Mathf.Round(box.transform.position.x), Mathf.Round(box.transform.position.y));
-            Vector2 goalPos = new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y));
-
-            if (boxPos == goalPos)
+            // Kalau box masuk dan goal masih kosong, tandai occupied
+            if (!isOccupied)
             {
                 isOccupied = true;
-                break;
+                Debug.Log("✅ Goal " + goalColor + " ditempati " + box.name);
             }
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        Box box = collision.GetComponent<Box>();
+        if (box != null && box.boxColor == goalColor)
+        {
+            // Kalau box keluar, goal jadi kosong lagi
+            isOccupied = false;
+            Debug.Log("❌ Goal " + goalColor + " kosong lagi");
         }
     }
 }

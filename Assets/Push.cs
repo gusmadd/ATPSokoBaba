@@ -36,6 +36,21 @@ public class Push : MonoBehaviour
                 goalScript.isOccupied = ((Vector2)transform.position == goalPos);
             }
         }
+        // Setelah transform.position dipindahkan
+        GameObject[] holes = GameObject.FindGameObjectsWithTag("Hole");
+        foreach (var h in holes)
+        {
+            Vector2 holePos = new Vector2(Mathf.Round(h.transform.position.x), Mathf.Round(h.transform.position.y));
+            if ((Vector2)transform.position == holePos)
+            {
+                Hole holeScript = h.GetComponent<Hole>();
+                if (holeScript != null && !holeScript.isFilled)
+                {
+                    holeScript.Fill(gameObject);
+                }
+            }
+        }
+
 
         return true;
     }
@@ -49,17 +64,24 @@ public class Push : MonoBehaviour
 
         foreach (var obj in obstacles)
         {
-            Vector2 obsPos = new Vector2(Mathf.Round(obj.transform.position.x), Mathf.Round(obj.transform.position.y));
+            if (obj == null) continue; // ⬅️ skip kalau sudah dihancurkan
+
+            Vector2 obsPos = new Vector2(
+                Mathf.Round(obj.transform.position.x),
+                Mathf.Round(obj.transform.position.y)
+            );
             if (targetPos == obsPos) return true;
         }
 
         foreach (var objToPush in objects)
         {
-            if (objToPush != gameObject)
-            {
-                Vector2 objPos = new Vector2(Mathf.Round(objToPush.transform.position.x), Mathf.Round(objToPush.transform.position.y));
-                if (targetPos == objPos) return true;
-            }
+            if (objToPush == null || objToPush == gameObject) continue; // ⬅️ skip null & diri sendiri
+
+            Vector2 objPos = new Vector2(
+                Mathf.Round(objToPush.transform.position.x),
+                Mathf.Round(objToPush.transform.position.y)
+            );
+            if (targetPos == objPos) return true;
         }
 
         return false;

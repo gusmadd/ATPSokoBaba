@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.SceneManagement; 
 public class PlayerMovement : MonoBehaviour
 {
     private GameObject[] obstacles;
@@ -17,6 +17,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // Input gerak
         Vector2 moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
         if (moveInput.sqrMagnitude > 0.5f && readyToMove)
@@ -32,7 +33,15 @@ public class PlayerMovement : MonoBehaviour
 
             Invoke("ResetMove", moveDelay);
         }
+
+        // 🔄 Restart level kalau tekan R
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Scene currentScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(currentScene.name); // reload scene yang sedang aktif
+        }
     }
+
 
     void ResetMove()
     {
@@ -67,13 +76,30 @@ public class PlayerMovement : MonoBehaviour
 
         foreach (var objToPush in objects)
         {
-            Vector2 objPos = new Vector2(Mathf.Round(objToPush.transform.position.x), Mathf.Round(objToPush.transform.position.y));
+            if (objToPush == null) continue; // ⬅️ Skip kalau sudah Destroy
+
+            Vector2 objPos = new Vector2(
+                Mathf.Round(objToPush.transform.position.x),
+                Mathf.Round(objToPush.transform.position.y)
+            );
+
             if (targetPos == objPos)
             {
                 Push objPush = objToPush.GetComponent<Push>();
                 if (objPush != null && !objPush.Move(direction)) return true;
             }
         }
+        GameObject[] holes = GameObject.FindGameObjectsWithTag("Hole");
+        foreach (var h in holes)
+        {
+            Hole holeScript = h.GetComponent<Hole>();
+            Vector2 holePos = new Vector2(Mathf.Round(h.transform.position.x), Mathf.Round(h.transform.position.y));
+
+            // Kalau hole kosong → treat sebagai obstacle
+            if ((Vector2)targetPos == holePos && holeScript != null && !holeScript.isFilled)
+                return true;
+        }
+
 
         return false;
     }

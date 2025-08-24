@@ -7,6 +7,11 @@ TagManager:
   - Obstacles
   - Objects
   - Goal
+  - Boax Red
+  - Boax Blue
+  - Goals Red
+  - Goals Blue
+  - Hole
   layers:
   - Default
   - TransparentFX
